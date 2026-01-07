@@ -1,18 +1,18 @@
 
 {
-  "name": "ARCOTECH GOLDEN LORO",
   "short_name": "ARCOTECH",
-  "description": "Terminal de voz hiperrealista Dorado SU",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#050505",
-  "theme_color": "#D4AF37",
+  "name": "ARCOTECH DORADO SU",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2592/2592185.png",
+      "src": "https://img.icons8.com/fluency/512/gold-bars.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#050505",
+  "background_color": "#050505",
+  "orientation": "portrait"
 }

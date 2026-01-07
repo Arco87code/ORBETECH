@@ -1,15 +1,14 @@
 
 import { GoogleGenAI, Modality } from "@google/genai";
 
-const API_KEY = process.env.API_KEY || "";
-
 export const generateSpeech = async (text: string, voiceName: string = 'Kore'): Promise<{ audioData: Uint8Array; latency: number }> => {
   const startTime = performance.now();
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  // Ensure we use a new instance with the current API_KEY from process.env
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-preview-tts",
-    contents: [{ parts: [{ text: `Say naturally: ${text}` }] }],
+    contents: [{ parts: [{ text: `Say naturally and clearly: ${text}` }] }],
     config: {
       responseModalities: [Modality.AUDIO],
       speechConfig: {
@@ -22,9 +21,10 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore'): 
 
   const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
   if (!base64Audio) {
-    throw new Error("No audio data received from Gemini");
+    throw new Error("No audio data received from matrix");
   }
 
+  // Implementation of Manual Decoding (as per SDK rules)
   const binaryString = atob(base64Audio);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
@@ -36,7 +36,7 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore'): 
 };
 
 export const transcribeAudio = async (base64Audio: string): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: {
