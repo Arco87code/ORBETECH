@@ -35,9 +35,9 @@ const App: React.FC = () => {
   const [showInstallGuide, setShowInstallGuide] = useState(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [copyFeedback, setCopyFeedback] = useState(false);
-  const [eta, setEta] = useState<number | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   // Wave Customization States
   const [waveThickness, setWaveThickness] = useState(3);
@@ -54,6 +54,11 @@ const App: React.FC = () => {
   const recordingIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // Detect Standalone Mode (PWA)
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
+      setIsStandalone(true);
+    }
+
     const checkDevice = () => {
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
       const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
@@ -123,15 +128,12 @@ const App: React.FC = () => {
     stopPlayback();
     setStatus(AppStatus.LOADING);
     setError(null);
-    const estimatedSeconds = 1.0 + (text.length / 200);
-    setEta(estimatedSeconds);
     const startLoadTime = performance.now();
     try {
       const { audioData } = await generateSpeech(text, selectedVoice);
       const audioBuffer = await decodeAudioData(audioData, audioCtxRef.current!);
       const duration = audioBuffer.duration;
-      const loadingTime = (performance.now() - startLoadTime) / 1000;
-      setMetadata({ duration, loadingTime, isPlaying: true, progress: 0 });
+      setMetadata({ duration, loadingTime: 0, isPlaying: true, progress: 0 });
       const source = audioCtxRef.current!.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(analyserRef.current!);
@@ -147,8 +149,6 @@ const App: React.FC = () => {
     } catch (err: any) {
       setError("Fallo Espectral.");
       setStatus(AppStatus.ERROR);
-    } finally {
-      setEta(null);
     }
   };
 
@@ -170,7 +170,6 @@ const App: React.FC = () => {
         reader.onloadend = async () => {
           const base64Audio = (reader.result as string).split(',')[1];
           setStatus(AppStatus.LOADING);
-          setEta(2.0);
           try {
             const result = await transcribeAudio(base64Audio);
             setText(result);
@@ -178,8 +177,6 @@ const App: React.FC = () => {
           } catch (err) {
             setError("Error de Dictado.");
             setStatus(AppStatus.ERROR);
-          } finally {
-            setEta(null);
           }
         };
         if (micStreamRef.current) {
@@ -239,49 +236,54 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between p-4 relative bg-black selection:bg-yellow-500 selection:text-black overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-between p-4 pb-8 relative bg-black selection:bg-yellow-500 selection:text-black overflow-hidden">
       
-      {/* PERSISTENT INSTALLATION BAR (HIGH VISIBILITY) */}
-      <div className="w-full max-w-md mx-auto mb-2 z-50">
-        <button 
-          onClick={installApp}
-          className="w-full group relative flex items-center justify-between px-6 py-4 bg-gradient-to-r from-yellow-600/20 via-yellow-500/10 to-yellow-600/20 border border-yellow-500/40 rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.2)] active:scale-95 transition-all overflow-hidden"
-        >
-          {/* Animated Background Shimmer */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-400/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
-          
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-yellow-500 rounded-lg text-black shadow-[0_0_10px_rgba(212,175,55,0.5)]">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      {/* PWA INSTALLATION TRIGGER (VISIBLE ONLY IF NOT STANDALONE) */}
+      {!isStandalone && (
+        <div className="w-full max-w-md mx-auto mb-4 z-50">
+          <button 
+            onClick={installApp}
+            className="w-full group relative flex items-center justify-between px-6 py-5 bg-yellow-500 text-black rounded-2xl shadow-[0_10px_40px_rgba(212,175,55,0.3)] active:scale-95 transition-all overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+            <div className="flex items-center space-x-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
+              <div className="text-left">
+                <p className="text-[14px] font-black tracking-widest uppercase">USAR APP SOLA</p>
+                <p className="text-[8px] font-bold opacity-70 tracking-tighter">ELIMINAR BARRA DE NAVEGACIÓN</p>
+              </div>
             </div>
-            <div className="text-left">
-              <p className="text-[12px] font-black text-yellow-500 tracking-[0.2em] uppercase">INSTALAR TERMINAL</p>
-              <p className="text-[8px] text-yellow-600/60 font-mono tracking-tighter">PROTOCOLO DORADO SU OPERATIVO</p>
+            <div className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center">
+              <span className="text-[10px] font-bold">GO</span>
             </div>
-          </div>
-          
-          <div className="flex items-center space-x-1">
-            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-ping"></div>
-            <span className="text-[10px] text-yellow-500 font-bold">READY</span>
-          </div>
-        </button>
+          </button>
 
-        {showInstallGuide && (
-          <div className="mt-3 p-4 bg-black/80 border border-cyan-500/30 rounded-2xl backdrop-blur-xl animate-fade-in shadow-2xl">
-            <div className="flex justify-between items-start mb-2">
-               <h4 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Guía de Instalación Manual</h4>
-               <button onClick={() => setShowInstallGuide(false)} className="text-cyan-900 hover:text-cyan-400">×</button>
+          {showInstallGuide && (
+            <div className="mt-3 p-5 bg-black/90 border border-yellow-500/30 rounded-3xl backdrop-blur-3xl animate-fade-in shadow-2xl relative">
+              <div className="flex justify-between items-center mb-4">
+                 <h4 className="text-[11px] font-black text-yellow-500 uppercase tracking-widest">ACTIVACIÓN STANDALONE</h4>
+                 <button onClick={() => setShowInstallGuide(false)} className="text-yellow-900 font-bold p-1">✕</button>
+              </div>
+              <div className="space-y-3 text-[10px] text-yellow-100/90 leading-relaxed font-mono">
+                <div className="flex items-start space-x-3">
+                  <span className="w-5 h-5 flex items-center justify-center bg-yellow-500 text-black rounded-full text-[8px] font-bold shrink-0">1</span>
+                  <p>Toca el icono de <span className="text-yellow-500 font-bold">[Compartir]</span> o los <span className="text-yellow-500 font-bold">[3 puntos]</span> del navegador.</p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="w-5 h-5 flex items-center justify-center bg-yellow-500 text-black rounded-full text-[8px] font-bold shrink-0">2</span>
+                  <p>Selecciona <span className="text-yellow-500 font-bold">"Añadir a pantalla de inicio"</span>.</p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="w-5 h-5 flex items-center justify-center bg-yellow-500 text-black rounded-full text-[8px] font-bold shrink-0">3</span>
+                  <p>Abre el icono de **ARCOTECH** desde tu menú para usarla sola.</p>
+                </div>
+              </div>
             </div>
-            <div className="space-y-2 text-[9px] text-yellow-100/80 leading-relaxed font-mono">
-              <p>1. Pulsa el icono de <span className="text-yellow-500 font-bold">[Compartir]</span> o los <span className="text-yellow-500 font-bold">[3 puntos]</span> de tu navegador.</p>
-              <p>2. Busca la opción <span className="text-yellow-500 font-bold">"Añadir a pantalla de inicio"</span> o <span className="text-yellow-500 font-bold">"Instalar Aplicación"</span>.</p>
-              <p>3. Confirma la descarga para activar la interfaz de seda en tu Honor 400.</p>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* BACKGROUND DECORATIVE ELEMENTS */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -290,13 +292,13 @@ const App: React.FC = () => {
       </div>
 
       {/* HEADER */}
-      <header className="w-full text-center py-4 z-10">
+      <header className={`w-full text-center z-10 ${isStandalone ? 'pt-10' : 'pt-4'}`}>
         <h1 className="text-6xl font-cinzel font-bold shimmer-text tracking-[0.3em] uppercase drop-shadow-lg">ARCOTECH</h1>
         <p className="text-[10px] tracking-[0.5em] text-yellow-700 font-bold uppercase mt-1">DORADO SU V12</p>
       </header>
 
       {/* MAIN CONSOLE */}
-      <main className="flex-1 w-full max-md flex flex-col items-center justify-center space-y-4 z-10">
+      <main className="flex-1 w-full max-w-md flex flex-col items-center justify-center space-y-4 z-10 px-2">
         
         {/* VISUALIZER & ORB AREA */}
         <div className="relative w-full flex flex-col items-center">
@@ -309,7 +311,6 @@ const App: React.FC = () => {
             secondaryColor={WAVE_COLORS[colorIndex].secondary}
           />
           
-          {/* FEEDBACK LABELS */}
           <div className="absolute top-0 flex flex-col items-center pointer-events-none w-full h-16">
             {status === AppStatus.RECORDING && (
               <div className="animate-fade-in flex flex-col items-center mt-4">
@@ -331,7 +332,7 @@ const App: React.FC = () => {
         </div>
 
         {/* TACTICAL CONTROLS */}
-        <div className="w-full space-y-3 bg-yellow-900/5 border border-yellow-900/20 p-5 rounded-[2.5rem] backdrop-blur-md">
+        <div className="w-full space-y-4 bg-yellow-900/5 border border-yellow-900/20 p-5 rounded-[2.5rem] backdrop-blur-md">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[8px] font-bold text-yellow-700 tracking-[0.3em] uppercase">PROTOCOLO DE ONDAS</span>
             <div className="flex space-x-2">
@@ -339,7 +340,7 @@ const App: React.FC = () => {
                 <button 
                   key={i} 
                   onClick={() => setColorIndex(i)}
-                  className={`w-4 h-4 rounded-full border border-white/10 transition-transform ${colorIndex === i ? 'scale-125 ring-2 ring-yellow-500' : 'opacity-40'}`}
+                  className={`w-4 h-4 rounded-full border border-white/10 transition-transform ${colorIndex === i ? 'scale-125 ring-2 ring-yellow-500 shadow-[0_0_10px_rgba(212,175,55,0.5)]' : 'opacity-40'}`}
                   style={{ background: `linear-gradient(135deg, ${c.primary}, ${c.secondary})` }}
                 />
               ))}
@@ -347,12 +348,12 @@ const App: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[7px] text-yellow-900 font-bold uppercase tracking-widest">Grosor: {waveThickness}</label>
+            <div className="space-y-2">
+              <label className="text-[7px] text-yellow-900 font-bold uppercase tracking-widest block">Grosor: {waveThickness}</label>
               <input type="range" min="1" max="10" step="0.5" value={waveThickness} onChange={(e) => setWaveThickness(parseFloat(e.target.value))} className="w-full h-1 bg-yellow-900/20 accent-yellow-500 rounded-full cursor-pointer" />
             </div>
-            <div className="space-y-1">
-              <label className="text-[7px] text-yellow-900 font-bold uppercase tracking-widest">Flujo: {waveSpeed}x</label>
+            <div className="space-y-2">
+              <label className="text-[7px] text-yellow-900 font-bold uppercase tracking-widest block">Flujo: {waveSpeed}x</label>
               <input type="range" min="0.1" max="5" step="0.1" value={waveSpeed} onChange={(e) => setWaveSpeed(parseFloat(e.target.value))} className="w-full h-1 bg-cyan-900/20 accent-cyan-500 rounded-full cursor-pointer" />
             </div>
           </div>
