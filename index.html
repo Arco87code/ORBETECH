@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARCOTECH GOLDEN LORO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #050505;
+            color: #D4AF37;
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1a1500 0%, #050505 100%);
+        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .gold-gradient {
+            background: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-border {
+            border: 1px solid transparent;
+            background-image: linear-gradient(#050505, #050505), radial-gradient(circle at top left, #BF953F, #FCF6BA, #B38728);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+        }
+        
+        /* SPECTRAL AR ANIMATIONS */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        @keyframes orbit {
+            from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+        }
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+            70% { box-shadow: 0 0 0 40px rgba(212, 175, 55, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes inner-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+
+        .ar-float { animation: float 6s ease-in-out infinite; }
+        .shimmer-text {
+            background: linear-gradient(90deg, #8B6508, #FCF6BA, #8B6508);
+            background-size: 200% auto;
+            animation: shimmer 3s linear infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-ring {
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            position: absolute;
+            pointer-events: none;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>

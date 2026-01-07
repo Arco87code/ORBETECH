@@ -1,0 +1,7 @@
+{
+  "name": "Copy of ARCOTECH GOLDEN LORO",
+  "description": "A high-fidelity universal voice processor with a golden aesthetic, featuring hyper-realistic text-to-speech and audio transcription capabilities.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
