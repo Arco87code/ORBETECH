@@ -6,8 +6,8 @@ interface SoundWavesProps {
   isActive: boolean;
   thickness: number;
   speed: number;
-  primaryColor: string; // Gold shade
-  secondaryColor: string; // Cyan shade
+  primaryColor: string;
+  secondaryColor: string;
 }
 
 const SoundWaves: React.FC<SoundWavesProps> = ({ 
@@ -15,87 +15,66 @@ const SoundWaves: React.FC<SoundWavesProps> = ({
   isActive, 
   thickness, 
   speed, 
-  primaryColor, 
-  secondaryColor 
+  primaryColor = "#00E5FF", 
+  secondaryColor = "#E0F7FA" 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const offsetRef = useRef(0);
 
   useEffect(() => {
-    if (!canvasRef.current || !analyser) return;
-
+    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.clientWidth * dpr;
+    canvas.height = canvas.clientHeight * dpr;
+    ctx.scale(dpr, dpr);
+
     let animationId: number;
+    const bufferLength = analyser ? analyser.frequencyBinCount : 128;
+    const dataArray = new Uint8Array(bufferLength);
+    let phase = 0;
 
-    const render = () => {
-      animationId = requestAnimationFrame(render);
-      analyser.getByteTimeDomainData(dataArray);
+    const draw = () => {
+      animationId = requestAnimationFrame(draw);
+      if (analyser) analyser.getByteTimeDomainData(dataArray);
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Update animation offset based on speed prop
-      offsetRef.current += 0.05 * speed;
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      phase += 0.08 * speed;
 
-      // Draw Gold (Primary) Wave
-      drawWave(ctx, dataArray, canvas.width, canvas.height, primaryColor, thickness, offsetRef.current);
-      // Draw Cyan (Secondary) Wave
-      drawWave(ctx, dataArray, canvas.width, canvas.height, secondaryColor, thickness * 0.75, -offsetRef.current + Math.PI);
-    };
+      const drawWave = (color: string, op: number, shift: number, weight: number, amplitude: number) => {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = isActive ? op : op * 0.15;
+        ctx.lineWidth = weight;
+        
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        const sliceWidth = w / bufferLength;
+        let x = 0;
 
-    const drawWave = (
-      context: CanvasRenderingContext2D, 
-      data: Uint8Array, 
-      width: number, 
-      height: number, 
-      color: string, 
-      lineWidth: number,
-      phaseOffset: number
-    ) => {
-      context.beginPath();
-      context.lineWidth = lineWidth;
-      context.strokeStyle = color;
-      context.shadowBlur = isActive ? 15 : 5;
-      context.shadowColor = color;
+        for (let i = 0; i < bufferLength; i++) {
+          const v = analyser ? (dataArray[i] / 128.0) : 1;
+          const y = (v * h) / 2 + Math.sin(i * 0.1 + phase + shift) * (isActive ? amplitude : 2);
 
-      const sliceWidth = width / bufferLength;
-      let x = 0;
-
-      for (let i = 0; i < bufferLength; i++) {
-        const v = data[i] / 128.0;
-        // Combine audio data with a sine wave for "ambient" movement when not speaking/playing
-        const ambientSine = Math.sin(i * 0.05 + phaseOffset) * (isActive ? 10 : 5);
-        const y = (v * height) / 2 + ambientSine;
-
-        if (i === 0) {
-          context.moveTo(x, y);
-        } else {
-          context.lineTo(x, y);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+          x += sliceWidth;
         }
+        ctx.stroke();
+      };
 
-        x += sliceWidth;
-      }
-
-      context.lineTo(width, height / 2);
-      context.stroke();
+      // Colores de onda en Cian como se solicitó
+      drawWave(secondaryColor, 0.3, 0, thickness, 8);
+      drawWave(primaryColor, 0.7, Math.PI, thickness * 1.5, 18);
     };
 
-    render();
+    draw();
     return () => cancelAnimationFrame(animationId);
   }, [analyser, isActive, thickness, speed, primaryColor, secondaryColor]);
 
-  return (
-    <canvas 
-      ref={canvasRef} 
-      width={600} 
-      height={150} 
-      className={`w-full max-w-md h-32 pointer-events-none transition-opacity duration-1000 ${isActive ? 'opacity-100' : 'opacity-30'}`}
-    />
-  );
+  return <canvas ref={canvasRef} className="w-full h-full block" />;
 };
 
 export default SoundWaves;

@@ -1,72 +1,98 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ARCOTECH GOLDEN LORO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ARCOTECH GOLDEN MASTER</title>
     
-    <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#050505">
+    <meta name="theme-color" content="#D4AF37">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ARCOTECH">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #050505;
-            color: #D4AF37;
-            font-family: 'Montserrat', sans-serif;
-            overflow: hidden;
-            background-image: radial-gradient(circle at 50% 50%, #1a1500 0%, #050505 100%);
-            height: 100vh;
-            width: 100vw;
-            position: fixed; /* Evita el scroll elástico en iOS */
-        }
-        .font-cinzel { font-family: 'Cinzel', serif; }
-        .gold-gradient {
-            background: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        :root {
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+            --gold-primary: #D4AF37;
+            --gold-deep: #B8860B;
+            --gold-light: #FDFCF0;
+            --cyan-tech: #00E5FF;
         }
         
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        * { -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: #FFFFFF;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 80%),
+                linear-gradient(rgba(212, 175, 55, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(212, 175, 55, 0.05) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            overflow: hidden;
+            height: 100dvh;
+            width: 100vw;
+            position: fixed;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
         }
 
-        .shimmer-text {
-            background: linear-gradient(90deg, #8B6508, #FCF6BA, #8B6508);
-            background-size: 200% auto;
-            animation: text-shimmer 3s linear infinite;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .mono { font-family: 'Space Mono', monospace; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
 
-        @keyframes text-shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+            height: 32px;
         }
-
-        /* HUD Scan Animation */
-        @keyframes scan {
-            0% { top: 0%; opacity: 0; }
-            50% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-        .scan-line {
-            position: absolute;
+        input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
-            height: 2px;
-            background: linear-gradient(to right, transparent, #D4AF37, transparent);
-            box-shadow: 0 0 15px #D4AF37;
-            animation: scan 4s linear infinite;
-            z-index: 100;
+            height: 4px;
+            background: linear-gradient(90deg, #FDFCF0, #EAE4B5);
+            border-radius: 4px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 12px;
+            background: var(--gold-primary);
+            cursor: pointer;
+            margin-top: -11px;
+            border-radius: 2px;
+            border: 1px solid #FFF;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+            transition: transform 0.2s;
+        }
+        input[type=range]:active::-webkit-slider-thumb {
+            transform: scaleX(1.5);
+            background: var(--cyan-tech);
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 0.1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--gold-primary);
+            box-shadow: 0 0 20px var(--gold-primary);
+            animation: scanline 8s linear infinite;
             pointer-events: none;
+            z-index: 50;
+        }
+
+        .gold-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
         }
     </style>
 <script type="importmap">
@@ -75,13 +101,21 @@
     "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "jszip": "https://esm.sh/jszip@^3.10.1"
   }
 }
 </script>
 </head>
 <body>
-    <div class="scan-line"></div>
+    <div class="scanline"></div>
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+      }
+    </script>
 </body>
 </html>

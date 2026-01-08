@@ -1,6 +1,6 @@
 {
-  "name": "Copy of ARCOTECH GOLDEN LORO",
-  "description": "A high-fidelity universal voice processor with a golden aesthetic, featuring hyper-realistic text-to-speech and audio transcription capabilities.",
+  "name": "ARCOTECH MASTER CONSOLE",
+  "description": "Professional white-studio voice processor with real DSP EQ and ultra-low latency neural synthesis.",
   "requestFramePermissions": [
     "microphone"
   ]

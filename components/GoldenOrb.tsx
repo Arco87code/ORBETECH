@@ -10,8 +10,8 @@ interface GoldenOrbProps {
 
 const GoldenOrb: React.FC<GoldenOrbProps> = ({ status, onClick, progress = 0, analyser }) => {
   const [amplitude, setAmplitude] = useState(0);
+  const [rotation, setRotation] = useState(0);
   const requestRef = useRef<number>(null);
-  
   const isActive = status === 'PLAYING' || status === 'LOADING' || status === 'RECORDING';
 
   useEffect(() => {
@@ -19,10 +19,9 @@ const GoldenOrb: React.FC<GoldenOrbProps> = ({ status, onClick, progress = 0, an
       setAmplitude(0);
       return;
     }
-
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
-
+    
     const updateAmplitude = () => {
       analyser.getByteTimeDomainData(dataArray);
       let sum = 0;
@@ -32,98 +31,109 @@ const GoldenOrb: React.FC<GoldenOrbProps> = ({ status, onClick, progress = 0, an
       }
       const rms = Math.sqrt(sum / bufferLength);
       setAmplitude(prev => prev * 0.7 + rms * 0.3);
+      setRotation(prev => prev + (1 + rms * 20));
       requestRef.current = requestAnimationFrame(updateAmplitude);
     };
-
     requestRef.current = requestAnimationFrame(updateAmplitude);
-    return () => {
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
-    };
+    return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
   }, [analyser, isActive]);
 
-  const scale = 1 + amplitude * 1.5;
-  const glowIntensity = 10 + amplitude * 120;
-  const pulseScale = 1 + amplitude * 2.5;
+  const scale = 1 + amplitude * 1.2;
+  const glowSize = 60 + amplitude * 300;
+  const ringScale = 1 + amplitude * 3;
 
   return (
-    <div className="relative flex items-center justify-center p-12 select-none ar-float">
+    <div className="relative flex items-center justify-center p-16 select-none perspective-1000">
       
-      {/* AR Pulse Rings (Emanating ripples) */}
-      <div 
-        className={`absolute w-44 h-44 rounded-full border-2 border-yellow-500/20 pointer-events-none transition-all duration-500 ${isActive ? 'animate-[ping_2s_infinite] opacity-40' : 'opacity-0'}`}
-        style={{ transform: `scale(${pulseScale * 1.2})` }}
-      ></div>
-      <div 
-        className={`absolute w-44 h-44 rounded-full border border-cyan-400/10 pointer-events-none transition-all duration-700 ${isActive ? 'animate-[ping_3s_infinite] opacity-30' : 'opacity-0'}`}
-        style={{ transform: `scale(${pulseScale * 1.5})`, animationDelay: '0.5s' }}
-      ></div>
+      {/* ANILLOS AR PROFESIONALES */}
+      {isActive && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {/* Anillo de Datos Periférico */}
+          <div 
+            className="absolute w-72 h-72 rounded-full border border-dashed border-[#D4AF37]/20"
+            style={{ transform: `rotate(${rotation * 0.2}deg) scale(${1 + amplitude * 0.5})` }}
+          ></div>
+          
+          {/* Anillo de Resonancia Dorado */}
+          <div 
+            className="absolute w-56 h-56 rounded-full border-[3px] border-[#D4AF37]/30 shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+            style={{ transform: `scale(${ringScale})`, opacity: 0.2 + amplitude }}
+          ></div>
+          
+          {/* Núcleo de Energía Cian AR */}
+          <div 
+            className="absolute w-64 h-64 rounded-full border border-[#00E5FF]/10"
+            style={{ 
+              transform: `rotate(${-rotation * 0.5}deg) scale(${1.2 + amplitude})`,
+              boxShadow: `inset 0 0 40px rgba(0, 229, 255, ${0.1 + amplitude})`
+            }}
+          ></div>
+        </div>
+      )}
 
-      {/* AR Field Rings */}
-      <div 
-        className={`absolute w-[340px] h-[340px] rounded-full border border-yellow-600/5 transition-opacity duration-1000 ${isActive ? 'opacity-30' : 'opacity-10'}`}
-        style={{ 
-          transform: `scale(${1 + amplitude * 0.2}) rotate(${Date.now() / 5000}deg)`,
-        }}
-      ></div>
-      
-      <div 
-        className={`absolute w-[300px] h-[300px] rounded-full border border-cyan-500/10 transition-opacity duration-1000 ${isActive ? 'opacity-40' : 'opacity-5'}`}
-        style={{ 
-          transform: `scale(${1 + amplitude * 0.4}) rotate(-${Date.now() / 3000}deg)`,
-        }}
-      ></div>
-
-      {/* Progress Ring */}
-      <svg className="absolute w-[220px] h-[220px] -rotate-90 pointer-events-none z-10">
-        <circle cx="110" cy="110" r="105" fill="transparent" stroke="rgba(212, 175, 55, 0.05)" strokeWidth="1" />
+      {/* CÍRCULO DE PROGRESO CINEMÁTICO */}
+      <svg className={`absolute w-[280px] h-[280px] -rotate-90 pointer-events-none z-10 transition-transform duration-500 ${status === 'LOADING' ? 'animate-spin' : ''}`}>
+        <circle cx="140" cy="140" r="130" fill="transparent" stroke="rgba(212, 175, 55, 0.03)" strokeWidth="0.5" />
         <circle
-          cx="110"
-          cy="110"
-          r="105"
+          cx="140" cy="140" r="130"
           fill="transparent"
-          stroke={status === 'RECORDING' ? '#ef4444' : '#FCF6BA'}
-          strokeWidth="3"
-          strokeDasharray={2 * Math.PI * 105}
-          strokeDashoffset={2 * Math.PI * 105 * (1 - progress)}
+          stroke={status === 'LOADING' ? '#00E5FF' : '#D4AF37'}
+          strokeWidth={status === 'LOADING' ? '6' : '4'}
+          strokeDasharray={2 * Math.PI * 130}
+          strokeDashoffset={status === 'LOADING' ? (2 * Math.PI * 130) * 0.7 : 2 * Math.PI * 130 * (1 - progress)}
+          strokeLinecap="butt"
           className="transition-all duration-300"
-          style={{ filter: `drop-shadow(0 0 ${4 + amplitude * 20}px ${status === 'RECORDING' ? '#ef4444' : '#D4AF37'})` }}
         />
+        {/* Marcadores de Grado */}
+        {[...Array(12)].map((_, i) => (
+          <rect key={i} x="139" y="8" width="2" height="10" fill="#D4AF37" opacity="0.2" transform={`rotate(${i * 30}, 140, 140)`} />
+        ))}
       </svg>
 
-      {/* Main Interactive Orb */}
+      {/* EL ORBE MAESTRO (CONSTRUCCIÓN MULTICAPA) */}
       <button
         onClick={onClick}
-        className={`relative w-44 h-44 rounded-full cursor-pointer overflow-hidden transform transition-all duration-200 shadow-2xl z-20 
-          ${status === 'RECORDING' ? 'ring-2 ring-red-500/50' : 'hover:scale-105 active:scale-90'}`}
+        className={`relative w-44 h-44 rounded-full cursor-pointer flex items-center justify-center overflow-hidden transition-all duration-300 z-20 shadow-2xl
+          ${status === 'LOADING' ? 'scale-90' : 'active:scale-95'}`}
         style={{
           transform: `scale(${scale})`,
-          background: 'radial-gradient(circle at 35% 35%, #FFFCE0 0%, #FCF6BA 15%, #D4AF37 40%, #8B6508 70%, #050505 100%)',
-          boxShadow: status === 'PLAYING' 
-            ? `0 0 ${glowIntensity}px rgba(212, 175, 55, 0.8), inset 0 0 40px rgba(255, 255, 255, 0.3)`
-            : status === 'RECORDING'
-            ? `0 0 ${glowIntensity}px rgba(255, 50, 50, 0.6), inset 0 0 40px rgba(255, 0, 0, 0.1)`
-            : `0 0 30px rgba(212, 175, 55, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)`,
+          background: 'radial-gradient(circle at 35% 35%, #FFFFFF 0%, #FDFCF0 15%, #D4AF37 80%, #996515 100%)',
+          boxShadow: `
+            0 0 ${glowSize}px rgba(212, 175, 55, 0.5),
+            inset 0 0 20px rgba(255, 255, 255, 0.8),
+            0 0 ${glowSize / 3}px rgba(0, 229, 255, ${isActive ? 0.4 : 0})
+          `,
         }}
       >
-        <div className={`absolute inset-0 opacity-30 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.6)_50%,transparent_75%)] bg-[length:250%_250%] ${isActive ? 'animate-[shimmer_3s_infinite]' : 'animate-[shimmer_10s_infinite]'}`}></div>
+        {/* Efecto de Cristal Rotatorio */}
+        <div 
+          className="absolute inset-0 opacity-30 bg-[conic-gradient(from_0deg,transparent,rgba(255,255,255,0.8),transparent)]"
+          style={{ transform: `rotate(${rotation}deg)` }}
+        ></div>
         
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-black drop-shadow-sm pointer-events-none select-none">
-          <div className="font-cinzel font-bold text-[10px] tracking-[0.3em] mb-1">
-            {status === 'IDLE' && 'INICIAR'}
-            {status === 'LOADING' && 'FORJANDO'}
-            {status === 'PLAYING' && 'EMITIENDO'}
-            {status === 'RECORDING' && 'CAPTANDO'}
-            {status === 'ERROR' && 'FALLO'}
+        {/* Núcleo de Datos Cian */}
+        <div 
+          className="absolute w-8 h-8 rounded-full bg-[#00E5FF] blur-xl animate-pulse transition-opacity"
+          style={{ opacity: isActive ? 0.8 : 0 }}
+        ></div>
+
+        <div className="relative flex flex-col items-center justify-center text-[#4B3B0B] pointer-events-none drop-shadow-md">
+          <span className="font-black text-[11px] tracking-[0.4em] uppercase mb-1">
+            {status === 'IDLE' && 'NEURAL'}
+            {status === 'LOADING' && 'SYNC'}
+            {status === 'PLAYING' && 'STUDIO'}
+            {status === 'ERROR' && 'VOID'}
+          </span>
+          <div className="flex space-x-1">
+             <div className={`w-1 h-4 transition-all ${isActive ? 'bg-[#00E5FF] h-6' : 'bg-[#4B3B0B]/20'} rounded-full`}></div>
+             <div className={`w-1 h-4 transition-all ${isActive ? 'bg-[#00E5FF] h-8 delay-75' : 'bg-[#4B3B0B]/20'} rounded-full`}></div>
+             <div className={`w-1 h-4 transition-all ${isActive ? 'bg-[#00E5FF] h-6 delay-150' : 'bg-[#4B3B0B]/20'} rounded-full`}></div>
           </div>
-          <div className={`w-8 h-[1.5px] bg-black/30 mb-1 transition-all duration-300 ${isActive ? 'w-12 opacity-100' : 'w-8 opacity-40'}`}></div>
-          <div className="text-[7px] font-bold opacity-50 tracking-[0.1em]">SPECTRAL CORE</div>
         </div>
       </button>
 
-      <div 
-        className={`absolute -bottom-16 w-32 h-6 bg-yellow-600/10 blur-2xl rounded-full transition-all duration-300 ${isActive ? 'opacity-40' : 'opacity-10'}`}
-        style={{ transform: `scale(${scale * 1.5})` }}
-      ></div>
+      {/* Aura de Suelo (Sombra AR) */}
+      <div className={`absolute -bottom-12 w-48 h-12 bg-[#D4AF37]/10 blur-[40px] rounded-full transition-all duration-500 ${isActive ? 'scale-150 opacity-100' : 'opacity-20'}`}></div>
     </div>
   );
 };

@@ -1,18 +1,20 @@
 
 {
   "short_name": "ARCOTECH",
-  "name": "ARCOTECH DORADO SU",
+  "name": "ARCOTECH CYAN MASTER",
   "icons": [
     {
-      "src": "https://img.icons8.com/fluency/512/gold-bars.png",
+      "src": "https://img.icons8.com/fluency-systems-filled/512/00E5FF/audio-wave.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "theme_color": "#050505",
-  "background_color": "#050505",
-  "orientation": "portrait"
+  "theme_color": "#00E5FF",
+  "background_color": "#FFFFFF",
+  "orientation": "portrait",
+  "description": "Terminal de procesamiento de voz ARCOTECH de alta fidelidad en Cyan"
 }
